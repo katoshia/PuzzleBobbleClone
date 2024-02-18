@@ -2,77 +2,56 @@ using UnityEngine;
 
 public class Shooter : MonoBehaviour
 {
-    public Transform shootingPoint;  // Reference to the point where the bubbles will be spawned
-    public GameObject bubblePrefab;  // Reference to the bubble prefab
-    public float rotationSpeed = 5f;  // Adjust the rotation speed as needed
-    public float shootForce = 10f;
+    public Transform shootingPoint;
+    public GameObject bubblePrefab;
+    public float rotationSpeed = 5f;
     public float maxRotation = 75f;
-    // Update is called once per frame
+    public float shootForce = 10f;
+
     void Update()
     {
-        AimCannon();  // Implement a function to handle aiming
+        AimCannon();
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            ShootBubble();  // Implement a function to handle shooting bubbles
+            ShootBubble();
         }
     }
+
     void AimCannon()
     {
         float horizontalInput = Input.GetAxis("Horizontal");
         float rotation = horizontalInput * rotationSpeed * Time.deltaTime;
 
-        // Calculate the new rotation after applying input
         float newRotation = transform.rotation.eulerAngles.z + rotation;
-
-        // Normalize the rotation to be between -180 and 180 degrees
         newRotation = Mathf.Repeat(newRotation + 180f, 360f) - 180f;
 
-        // Clamp the rotation between -maxRotation and maxRotation
         float clampedRotation = Mathf.Clamp(newRotation, -maxRotation, maxRotation);
 
-        // Apply the clamped rotation
         transform.rotation = Quaternion.Euler(0f, 0f, clampedRotation);
     }
-    //void AimCannon()
-    //{
-    //    float horizontalInput = Input.GetAxis("Horizontal");
-    //    float rotation = horizontalInput * rotationSpeed * Time.deltaTime;
-
-    //    // Calculate the new rotation after applying input
-    //    float newRotation = transform.rotation.eulerAngles.z + rotation;
-
-    //    // Clamp the rotation between -maxRotation and maxRotation
-    //    float clampedRotation = Mathf.Clamp(newRotation, -maxRotation, maxRotation);
-
-    //    // Apply the clamped rotation
-    //    transform.rotation = Quaternion.Euler(0f, 0f, clampedRotation);
-    //}
-    //void AimCannon()
-    //{
-    //    float horizontalInput = Input.GetAxis("Horizontal");
-    //    float rotation = horizontalInput * rotationSpeed * Time.deltaTime;
-
-    //    // Limit the rotation between -75 and 75 degrees on the Z-axis
-    //    float clampedRotation = Mathf.Clamp(transform.rotation.eulerAngles.z + rotation, -75f, 75f);
-
-    //    // Apply the clamped rotation
-    //    transform.rotation = Quaternion.Euler(0f, 0f, clampedRotation);
-    //}
-
     void ShootBubble()
     {
-        // Calculate the shooting direction based on the rotation of the shooter
-        Vector2 shootDirection = shootingPoint.up;
-
         // Instantiate a new bubble at the shooting point
         GameObject newBubble = Instantiate(bubblePrefab, shootingPoint.position, Quaternion.identity);
+
+        // Get the Bubble component of the new bubble
+        Bubble bubbleScript = newBubble.GetComponent<Bubble>();
+
+        // The bubbleSprites array is accessed from the Bubble script on the new bubble
+        // No need to assign it here if it's already set up in the Bubble prefab
+        // bubbleScript.bubbleSprites = bubbleSprites;
+
+        // Get the rigidbody component of the bubble
         Rigidbody2D bubbleRb = newBubble.GetComponent<Rigidbody2D>();
 
-        if (bubbleRb != null)
-        {
-            // Apply force in the calculated direction
-            bubbleRb.AddForce(shootDirection * shootForce, ForceMode2D.Impulse);
-        }
+        // Calculate the shooting direction based on the shooter's rotation
+        Vector2 shootingDirection = shootingPoint.up;
+
+        // Apply force to move the bubble in the shooting direction
+        bubbleRb.AddForce(shootingDirection * shootForce, ForceMode2D.Impulse);
+
+        // Add a script to the new bubble to handle collisions with the grid
+        bubbleScript.SetupBubbleGridInteraction();
     }
 }
